@@ -2,21 +2,30 @@
 // Created by fox0117 on 16.03.18.
 //
 
+#include <climits>
+#include <cmath>
 #include "CompressorShannon.h"
 
 int CompressorShannon::getMid(int start, int end)
 {
-    double median = (sum[end] - sum[start]) / 2.0;
-    double prevDiff = sum[end], nextDiff;
-    int midPosition = start;
-    while (midPosition < end &&
-           (nextDiff = abs(sum[midPosition+1] - sum[start] - median)) < prevDiff)
-    {
-        prevDiff = nextDiff;
-        ++midPosition;
+    long long prevFreq = 0, fullProb = 0;
+    int found = start;
+    for(int i = start; i < end; fullProb += probabilities[i], ++i);
+
+    double midPosition = (double)fullProb / 2, difference = LONG_MAX;
+    for(int i = start; i < end; ++i){
+        prevFreq += probabilities[i];
+        double nextDiff = std::fabs(prevFreq - midPosition);
+        if(difference < nextDiff)
+            return found;
+
+        if(difference >= nextDiff){
+            difference = nextDiff;
+            found = i;
+        }
     }
 
-    return midPosition-1;
+    return found;
 }
 
 void CompressorShannon::split(int start, int end, std::string *code)
@@ -25,9 +34,18 @@ void CompressorShannon::split(int start, int end, std::string *code)
     {
         int mid = getMid(start, end);
         *code += '0';
-        split(start, mid+1, code);
+        if (mid + 1 < end)
+            split(start, mid+1, code);
+        else
+            split(start, mid, code);
+
         (*code)[code->size()-1]='1';
-        split(mid+1, end, code);
+
+        if (mid + 1 > start)
+            split(mid+1, end, code);
+        else
+            split(mid, end, code);
+
         code->pop_back();
     }
     else
@@ -44,49 +62,67 @@ void CompressorShannon::build()
     split(0, probabilities.size(), &code);
 }
 
+void CompressorShannon::clear(Node *curr)
+{
+    if (curr->zero != nullptr)
+        clear(curr->zero);
+
+    if (curr->one != nullptr)
+        clear(curr->one);
+
+    delete curr;
+}
+
+void CompressorShannon::buildTree(Node *currentNode, int codeNum, int ind)
+{
+    if (codeNum >= codes.size())
+        return;
+
+    if (ind >= codes[codeNum].length())
+    {
+        currentNode->id = codeNum;
+        return;
+    }
+
+    if (codes[codeNum][ind] == '0')
+    {
+        if (currentNode->zero == nullptr)
+            currentNode->zero = new Node {-1, nullptr, nullptr};
+
+        buildTree(currentNode->zero, codeNum, ind+1);
+    }
+    else
+    {
+        if (currentNode->one == nullptr)
+            currentNode->one = new Node {-1, nullptr, nullptr};
+
+        buildTree(currentNode->one, codeNum, ind+1);
+    }
+
+    if (currentNode == root && codeNum < codes.size())
+        buildTree(root, codeNum + 1);
+}
+
 unsigned long long CompressorShannon::compress(std::string filename)
 {
-    /*input.open(filename, std::ios::in | std::ios::binary);
+    input.open(filename, std::ios::in | std::ios::binary);
     output.open(filename + ".shan", std::ios::out | std::ios::binary);
     input.clear();
     output.clear();
 
-    unsigned int freq[256] = {};
+    unsigned int* freq;
     int chars[256];
     unsigned char ch;
-    input.read((char*) &ch, sizeof(unsigned char));
-    while (!input.eof())
-    {
-        freq[(int)ch]++;
-        input.read((char*) &ch, sizeof(unsigned char));
-    }
+    freq = getFrequences();
 
     for (int i = 0; i < 256; output.write((char *) &freq[i], sizeof(unsigned int)), ++i);
 
-    int maxInd = 0;
-    for (int j = 0; j < 256; ++j)
-    {
-        for (int i = 0; i < 256; ++i)
-            if (freq[maxInd] < freq[i])
-                maxInd = i;
-
-        if (freq[maxInd] > 0)
-        {
-            nodes.push_back(new item(freq[maxInd], nullptr, nullptr, nodes.size()));
-            chars[maxInd] = j;
-            freq[maxInd] = 0;
-        }
-        else
-            break;
-    }
+    addChances(chars, freq);
 
     build();
     std::string code = "";
-    calcCodes(&code, nodes[0]);
-
     char pos = 7;
     unsigned char outChar = 0;
-    code = "";
     ch = 0;
     input.clear();
     input.seekg(0, std::ios::beg);
@@ -116,12 +152,86 @@ unsigned long long CompressorShannon::compress(std::string filename)
     output.write(&pos, sizeof(char));
     input.close();
     output.close();
-    nodes.clear();
-    codes.clear();*/
+    probabilities.clear();
+    sum.clear();
+    codes.clear();
     return 0;
 }
 
 unsigned long long CompressorShannon::decompress(std::string filename)
 {
+    input.open(filename + ".shan", std::ios::in | std::ios::binary);
+    output.open(filename + ".unshan", std::ios::out | std::ios::binary);
+    input.clear();
+    output.clear();
 
+    char lastByteLength;
+    input.seekg(-sizeof(char), std::ios::end);
+    std::streampos endFile = input.tellg();
+    input.read(&lastByteLength, sizeof(char));
+    input.seekg(0);
+    unsigned int freq[256] = {};
+    char chars[256];
+    for (int i = 0; i < 256; input.read((char*) &(freq[i++]), sizeof(unsigned int)));
+
+    addChances(chars, freq);
+
+    build();
+    std::string code = "";
+
+    root = new Node {-1, nullptr, nullptr};
+    buildTree(root, 0);
+
+    Node* currentItem = root;
+    unsigned char ch;
+    input.read((char*) &ch, sizeof(unsigned char));
+    while (input.tellg() != endFile && !input.eof())
+    {
+        for (char i = 7; i > -1; --i)
+        {
+            if (currentItem->id != -1)
+            {
+                output.write(&(chars[currentItem->id]), sizeof(char));
+                currentItem = root;
+            }
+
+            if (ch & (1 << i))
+                currentItem = currentItem->one;
+            else
+                currentItem = currentItem->zero;
+        }
+
+        if (currentItem->id != -1)
+        {
+            output.write(&(chars[currentItem->id]), sizeof(char));
+            currentItem = root;
+        }
+
+        input.read((char*) &ch, sizeof(unsigned char));
+    }
+
+    for (char i = 7; i > lastByteLength; --i)
+    {
+        if (currentItem->id != -1)
+        {
+            output.write(&(chars[currentItem->id]), sizeof(char));
+            currentItem = root;
+        }
+
+        if (ch & (1 << i))
+            currentItem = currentItem->one;
+        else
+            currentItem = currentItem->zero;
+    }
+
+    if (currentItem->id != -1)
+        output.write(&(chars[currentItem->id]), sizeof(char));
+
+    input.close();
+    output.close();
+    clear(root);
+    sum.clear();
+    probabilities.clear();
+    codes.clear();
+    return 0;
 }

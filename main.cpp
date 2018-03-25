@@ -13,12 +13,31 @@ using namespace std;
 
 int main() {
     std::string filename = "../samples-for-students/";
-    CompressorHuffman comp;
-    for(int i = 11; i < 37; ++i)
+
+    Compressor* cmprs[5] = { new CompressorHuffman(), new CompressorShannon(), new CompressorLZ77(5*1024, 4*1024),
+                             new CompressorLZ77(10*1024, 8*1024), new CompressorLZ77(20*1024, 16*1024)};
+    std::string decomp_ext[5] = { ".unhaff", ".unshan", ".unlz775", ".unlz7710", ".unlz7720" };
+    std::string algo_name[5] = { "Huffman", "Shannon", "LZ775", "LZ7710", "LZ7720" };
+    /*compressorShannon.compress("inputTest");
+    compressorShannon.decompress("inputTest");
+    std::cout << compressorShannon.validate("inputTest", "inputTest.unshan");
+    compressorShannon.compress(filename + "05");
+    compressorShannon.decompress(filename + "05");
+    cout << (compressorShannon.validate(filename + "05", filename + "05" + ".unshan") ? "OK" : "ERROR") << std::endl;*/
+
+    for (int c = 1; c < 5; ++c)
     {
-        comp.compress(filename + to_string(i));
-        comp.decompress(filename + to_string(i));
-        cout << (comp.validate(filename + to_string(i), filename + to_string(i) + ".unhaff") ? "OK" : "ERROR") << std::endl;
+        cout << "--------------------------\n" << algo_name[c] << "-------------------\n";
+        for(int i = 1; i < 37; ++i)
+        {
+            string app = "";
+            if (i < 10)
+                app += "0";
+            app += to_string(i);
+            cmprs[c]->compress(filename + app);
+            cmprs[c]->decompress(filename + app);
+            cout << app + ": " + (cmprs[c]->validate(filename + app, filename + app + decomp_ext[c]) ? "OK" : "ERROR") << std::endl;
+        }
     }
 
     /*comp.compress(filename + "13");
