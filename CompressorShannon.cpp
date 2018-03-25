@@ -4,6 +4,7 @@
 
 #include <climits>
 #include <cmath>
+#include <chrono>
 #include "CompressorShannon.h"
 
 int CompressorShannon::getMid(int start, int end)
@@ -110,6 +111,8 @@ unsigned long long CompressorShannon::compress(std::string filename)
     input.clear();
     output.clear();
 
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     unsigned int* freq;
     int chars[256];
     unsigned char ch;
@@ -155,7 +158,10 @@ unsigned long long CompressorShannon::compress(std::string filename)
     probabilities.clear();
     sum.clear();
     codes.clear();
-    return 0;
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 }
 
 unsigned long long CompressorShannon::decompress(std::string filename)
@@ -164,6 +170,8 @@ unsigned long long CompressorShannon::decompress(std::string filename)
     output.open(filename + ".unshan", std::ios::out | std::ios::binary);
     input.clear();
     output.clear();
+
+    auto startTime = std::chrono::high_resolution_clock::now();
 
     char lastByteLength;
     input.seekg(-sizeof(char), std::ios::end);
@@ -233,5 +241,8 @@ unsigned long long CompressorShannon::decompress(std::string filename)
     sum.clear();
     probabilities.clear();
     codes.clear();
-    return 0;
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 }

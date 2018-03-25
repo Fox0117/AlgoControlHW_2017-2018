@@ -3,6 +3,7 @@
 //
 
 #include "CompressorLZ77.h"
+#include <chrono>
 
 CompressorLZ77::Node CompressorLZ77::getMaxPrefixNode(int histIndStart, int prevIndStart, int prevIndEnd, int fileSize)
 {
@@ -56,6 +57,8 @@ unsigned long long CompressorLZ77::compress(std::string filename)
     input.open(filename, std::ios::in | std::ios::binary);
     output.open(filename + ".lz77" + std::to_string(buffSize/1024), std::ios::out | std::ios::binary);
 
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     input.seekg(0, std::ios::end);
     int fileSize = input.tellg();
     input.seekg(0, std::ios::beg);
@@ -87,13 +90,17 @@ unsigned long long CompressorLZ77::compress(std::string filename)
     input.close();
     output.close();
 
-    return 0;
+    auto endTime = std::chrono::high_resolution_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 }
 
 unsigned long long CompressorLZ77::decompress(std::string filename)
 {
     input.open(filename + ".lz77" + std::to_string(buffSize / 1024), std::ios::in | std::ios::binary);
     output.open(filename + ".unlz77" + std::to_string(buffSize / 1024), std::ios::out | std::ios::binary);
+
+    auto startTime = std::chrono::high_resolution_clock::now();
 
     readBytes = 0;
     int prevInd = 0;
@@ -140,5 +147,7 @@ unsigned long long CompressorLZ77::decompress(std::string filename)
     input.close();
     output.close();
 
-    return 0;
+    auto endTime = std::chrono::high_resolution_clock::now();
+
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 }

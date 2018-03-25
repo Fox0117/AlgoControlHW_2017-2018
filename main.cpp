@@ -1,6 +1,8 @@
 // КДЗ по дисциплине Алгоритмы и структуры данных 2017-2018 уч.год
 // Выполнил Кончагин Андрей Максимович, группа БПИ-161, дата (16.03.2018)
-// Среда разработки CLion, состав проекта (main.cpp CompressorHuffman.h CompressorHuffman.cpp CompressorShannon.h CompressorShannon.cpp CompressorLZ77.h CompressorLZ77.cpp)
+// Среда разработки CLion,
+// состав проекта (main.cpp CompressorHuffman.h CompressorHuffman.cpp
+// CompressorShannon.h CompressorShannon.cpp CompressorLZ77.h CompressorLZ77.cpp)
 // Выполнены алгоритмы: Хаффман, Шеннон-Фано, Лемпель-Зив 77 года
 
 #include <iostream>
@@ -8,48 +10,14 @@
 #include "CompressorHuffman.h"
 #include "CompressorShannon.h"
 #include "CompressorLZ77.h"
+#include "CHWController.h"
 
 using namespace std;
 
 int main() {
-    std::string filename = "../samples-for-students/";
-
-    Compressor* cmprs[5] = { new CompressorHuffman(), new CompressorShannon(), new CompressorLZ77(5*1024, 4*1024),
-                             new CompressorLZ77(10*1024, 8*1024), new CompressorLZ77(20*1024, 16*1024)};
-    std::string decomp_ext[5] = { ".unhaff", ".unshan", ".unlz775", ".unlz7710", ".unlz7720" };
-    std::string algo_name[5] = { "Huffman", "Shannon", "LZ775", "LZ7710", "LZ7720" };
-    /*compressorShannon.compress("inputTest");
-    compressorShannon.decompress("inputTest");
-    std::cout << compressorShannon.validate("inputTest", "inputTest.unshan");
-    compressorShannon.compress(filename + "05");
-    compressorShannon.decompress(filename + "05");
-    cout << (compressorShannon.validate(filename + "05", filename + "05" + ".unshan") ? "OK" : "ERROR") << std::endl;*/
-
-    for (int c = 1; c < 5; ++c)
-    {
-        cout << "--------------------------\n" << algo_name[c] << "-------------------\n";
-        for(int i = 1; i < 37; ++i)
-        {
-            string app = "";
-            if (i < 10)
-                app += "0";
-            app += to_string(i);
-            cmprs[c]->compress(filename + app);
-            cmprs[c]->decompress(filename + app);
-            cout << app + ": " + (cmprs[c]->validate(filename + app, filename + app + decomp_ext[c]) ? "OK" : "ERROR") << std::endl;
-        }
-    }
-
-    /*comp.compress(filename + "13");
-    comp.decompress(filename + "13");
-    cout << (comp.validate(filename + "13", filename + "13.unhaff") ? "OK" : "ERROR") << std::endl;
-    comp.compress("inputTest");
-    comp.decompress("inputTest");
-    cout << (comp.validate("inputTest", "inputTest.unhaff") ? "OK" : "ERROR") << std::endl;*/
-
-    /*CompressorLZ77 compressorLZ77(20*1024, 16*1024);
-    compressorLZ77.compress(filename+"05");
-    compressorLZ77.decompress(filename+"05");
-    cout << compressorLZ77.validate(filename+"05",filename+"05.unlz7720");*/
+    CHWController* controller = new CHWController("../samples-for-students/");
+    controller->estimateTestFiles();
+    //controller->estimate(0, 1, 1, 2);
+    controller->writeStatisticsToCSV("results.csv");
     return 0;
 }

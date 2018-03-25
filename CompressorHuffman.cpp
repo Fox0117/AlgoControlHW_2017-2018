@@ -7,6 +7,7 @@
 #include "CompressorHuffman.h"
 #include <fstream>
 #include <iostream>
+#include <chrono>
 
 int CompressorHuffman::binSearch(int key)
 {
@@ -74,6 +75,8 @@ unsigned long long CompressorHuffman::compress(std::string filename)
     input.clear();
     output.clear();
 
+    auto startTime = std::chrono::high_resolution_clock::now();
+
     unsigned int* freq;
     int chars[256];
     unsigned char ch;
@@ -117,11 +120,14 @@ unsigned long long CompressorHuffman::compress(std::string filename)
 
     output.write((char*) &outChar, sizeof(unsigned char));
     output.write(&pos, sizeof(char));
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+
     input.close();
     output.close();
     nodes.clear();
     codes.clear();
-    return 0;
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 }
 
 unsigned long long CompressorHuffman::decompress(std::string filename)
@@ -130,6 +136,8 @@ unsigned long long CompressorHuffman::decompress(std::string filename)
     output.open(filename + ".unhaff", std::ios::out | std::ios::binary);
     input.clear();
     output.clear();
+
+    auto startTime = std::chrono::high_resolution_clock::now();
 
     char lastByteLength;
     input.seekg(-sizeof(char), std::ios::end);
@@ -192,7 +200,10 @@ unsigned long long CompressorHuffman::decompress(std::string filename)
     input.close();
     output.close();
     clear(nodes[0]);
+
+    auto endTime = std::chrono::high_resolution_clock::now();
+
     nodes.clear();
     codes.clear();
-    return 0;
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime).count();
 }
