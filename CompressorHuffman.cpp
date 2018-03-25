@@ -74,34 +74,14 @@ unsigned long long CompressorHuffman::compress(std::string filename)
     input.clear();
     output.clear();
 
-    unsigned int freq[256] = {};
+    unsigned int* freq;
     int chars[256];
     unsigned char ch;
-    input.read((char*) &ch, sizeof(unsigned char));
-    while (!input.eof())
-    {
-        freq[(int)ch]++;
-        input.read((char*) &ch, sizeof(unsigned char));
-    }
+    freq = getFrequences();
 
     for (int i = 0; i < 256; output.write((char *) &freq[i], sizeof(unsigned int)), ++i);
 
-    int maxInd = 0;
-    for (int j = 0; j < 256; ++j)
-    {
-        for (int i = 0; i < 256; ++i)
-            if (freq[maxInd] < freq[i])
-                maxInd = i;
-
-        if (freq[maxInd] > 0)
-        {
-            nodes.push_back(new item(freq[maxInd], nullptr, nullptr, nodes.size()));
-            chars[maxInd] = j;
-            freq[maxInd] = 0;
-        }
-        else
-            break;
-    }
+    addChances(chars, freq);
 
     build();
     std::string code = "";
@@ -160,22 +140,7 @@ unsigned long long CompressorHuffman::decompress(std::string filename)
     char chars[256];
     for (int i = 0; i < 256; input.read((char*) &(freq[i++]), sizeof(unsigned int)));
 
-    int maxInd = 0;
-    for (int j = 0; j < 256; ++j)
-    {
-        for (int i = 0; i < 256; ++i)
-            if (freq[maxInd] < freq[i])
-                maxInd = i;
-
-        if (freq[maxInd] > 0)
-        {
-            nodes.push_back(new item(freq[maxInd], nullptr, nullptr, nodes.size()));
-            chars[j] = (char)maxInd;
-            freq[maxInd] = 0;
-        }
-        else
-            break;
-    }
+    addChances(chars, freq);
 
     build();
     std::string code = "";

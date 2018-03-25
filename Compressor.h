@@ -14,6 +14,65 @@ protected:
     std::ifstream input;
     std::ofstream output;
 
+    unsigned int* getFrequences()
+    {
+        unsigned int* freq = new unsigned int[256];
+        unsigned char ch;
+        input.read((char*) &ch, sizeof(unsigned char));
+        while (!input.eof())
+        {
+            freq[(int)ch]++;
+            input.read((char*) &ch, sizeof(unsigned char));
+        }
+
+        return freq;
+    }
+
+    void addChances(int* chars, unsigned int* freq)
+    {
+        int maxInd = 0;
+        for (int j = 0; j < 256; ++j)
+        {
+            for (int i = 0; i < 256; ++i)
+                if (freq[maxInd] < freq[i])
+                    maxInd = i;
+
+            if (freq[maxInd] > 0)
+            {
+                addChance(freq[maxInd]);
+                chars[maxInd] = j;
+                freq[maxInd] = 0;
+            }
+            else
+                break;
+        }
+    }
+
+    void addChances(char* chars, unsigned int* freq)
+    {
+        int maxInd = 0;
+        for (int j = 0; j < 256; ++j)
+        {
+            for (int i = 0; i < 256; ++i)
+                if (freq[maxInd] < freq[i])
+                    maxInd = i;
+
+            if (freq[maxInd] > 0)
+            {
+                addChance(freq[maxInd]);
+                chars[j] = (char)maxInd;
+                freq[maxInd] = 0;
+            }
+            else
+                break;
+        }
+    }
+
+    virtual void addChance(unsigned int oneFreq)
+    {
+        return;
+    }
+
 public:
     virtual unsigned long long compress(std::string filename)
     {

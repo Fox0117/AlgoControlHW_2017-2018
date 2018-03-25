@@ -52,6 +52,11 @@ private:
 
     void clear(item *it);
 
+    void addChance(unsigned int oneFreq) override
+    {
+        nodes.push_back(new item(oneFreq, nullptr, nullptr, nodes.size()));
+    }
+
 public:
     unsigned long long compress(std::string filename) override;
     unsigned long long decompress(std::string filename) override;
