@@ -3,7 +3,6 @@
 //
 
 #include "Compressor.h"
-#include <stdexcept>
 
 unsigned int* Compressor::getFrequences()
 {

@@ -7,17 +7,16 @@
 
 #include <iostream>
 #include <string>
-#include "CompressorHuffman.h"
-#include "CompressorShannon.h"
-#include "CompressorLZ77.h"
 #include "CHWController.h"
 
 using namespace std;
 
 int main() {
-    CHWController* controller = new CHWController("../samples-for-students/");
+    std::string dir = "../samples-for-students/";
+    std::cout << "Enter test directory: ";
+    std::cin >> dir;
+    CHWController* controller = new CHWController(dir);
     controller->estimateTestFiles();
-    //controller->estimate(0, 1, 1, 2);
     controller->writeStatisticsToCSV("results.csv");
     return 0;
 }

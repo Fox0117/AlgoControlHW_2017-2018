@@ -1,5 +1,5 @@
 //
-// Created by fox0117 on 25.03.18.
+// Created by fox0117 on 23.03.18.
 //
 
 #include "CHWController.h"
@@ -71,7 +71,7 @@ void CHWController::estimate(int fromAlgo, int toAlgo, int fromFile, int toFile,
     {
         for(int i = fromAlgo; i < toAlgo; ++i)
         {
-            for (int c = 0; c < 2; ++c)
+            for (int c = 0; c < 20; ++c)
             {
                 std::string app = "";
                 if (j < 10)
@@ -143,8 +143,8 @@ void CHWController::writeStatisticsToCSV(std::string file)
         for (int j = 0; j < 5; ++j)
         {
             output << compressorStatistic[i-1][j].coefficient << ";\t";
-            output << compressorStatistic[i-1][j].compressingTime / 2.0 << ";\t";
-            output << compressorStatistic[i-1][j].decompressingTime / 2.0 << ";\t";
+            output << compressorStatistic[i-1][j].compressingTime / 20.0 << ";\t";
+            output << compressorStatistic[i-1][j].decompressingTime / 20.0 << ";\t";
             compressorStatistic[i-1][j].compressingTime=0;
             compressorStatistic[i-1][j].decompressingTime=0;
         }
